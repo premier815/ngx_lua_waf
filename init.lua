@@ -1,6 +1,6 @@
 require 'config'
 local match = string.match
-local ngxmatch=ngx.re.match
+local ngxfind=ngx.re.find
 local unescape=ngx.unescape_uri
 local get_headers = ngx.req.get_headers
 local optionIsOn = function (options) return options == "on" and true or false end
@@ -82,7 +82,7 @@ function whiteurl()
     if WhiteCheck then
         if wturlrules ~=nil then
             for _,rule in pairs(wturlrules) do
-                if ngxmatch(ngx.var.uri,rule,"isjo") then
+                if ngxfind(ngx.var.uri,rule,"isjo") then
                     return true 
                  end
             end
@@ -95,7 +95,7 @@ function fileExtCheck(ext)
     ext=string.lower(ext)
     if ext then
         for rule in pairs(items) do
-            if ngx.re.match(ext,rule,"isjo") then
+            if ngxfind(ext,rule,"isjo") then
 	        log('POST',ngx.var.request_uri,"-","file attack with ext "..ext)
             say_html()
             end
@@ -124,7 +124,7 @@ function args()
             else
                 data=val
             end
-            if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(unescape(data),rule,"isjo") then
+            if data and type(data) ~= "boolean" and rule ~="" and ngxfind(unescape(data),rule,"isjo") then
                 log('GET',ngx.var.request_uri,"-",rule)
                 say_html()
                 return true
@@ -138,7 +138,7 @@ end
 function url()
     if UrlDeny then
         for _,rule in pairs(urlrules) do
-            if rule ~="" and ngxmatch(ngx.var.request_uri,rule,"isjo") then
+            if rule ~="" and ngxfind(ngx.var.request_uri,rule,"isjo") then
                 log('GET',ngx.var.request_uri,"-",rule)
                 say_html()
                 return true
@@ -152,7 +152,7 @@ function ua()
     local ua = ngx.var.http_user_agent
     if ua ~= nil then
         for _,rule in pairs(uarules) do
-            if rule ~="" and ngxmatch(ua,rule,"isjo") then
+            if rule ~="" and ngxfind(ua,rule,"isjo") then
                 log('UA',ngx.var.request_uri,"-",rule)
                 say_html()
             return true
@@ -163,7 +163,7 @@ function ua()
 end
 function body(data)
     for _,rule in pairs(postrules) do
-        if rule ~="" and data~="" and ngxmatch(unescape(data),rule,"isjo") then
+        if rule ~="" and data~="" and ngxfind(unescape(data),rule,"isjo") then
             log('POST',ngx.var.request_uri,data,rule)
             say_html()
             return true
@@ -175,7 +175,7 @@ function cookie()
     local ck = ngx.var.http_cookie
     if CookieCheck and ck then
         for _,rule in pairs(ckrules) do
-            if rule ~="" and ngxmatch(ck,rule,"isjo") then
+            if rule ~="" and ngxfind(ck,rule,"isjo") then
                 log('Cookie',ngx.var.request_uri,"-",rule)
                 say_html()
             return true
