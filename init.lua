@@ -21,8 +21,8 @@ function getClientIp()
         IP = ngx.var.remote_addr
         if IP == nil then
             IP = "unknown"
-        end 
-    end 
+        end
+    end
     return IP
 end
 function write(logfile,msg)
@@ -37,13 +37,13 @@ function log(method,url,data,ruletag)
         local realIp = getClientIp()
         local ua = ngx.var.http_user_agent
         local servername=ngx.var.server_name
+        local http_host=ngx.var.host
         local time=ngx.localtime()
-        if ua  then
-            line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\"  \""..ua.."\" \""..ruletag.."\"\n"
-        else
-            line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\" - \""..ruletag.."\"\n"
+        if ua == nil then
+            ua = "-"
         end
-        local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
+        line = realIp.." ["..time.."] \""..method.." "..http_host..url.."\" \""..data.."\"  \""..ua.."\" \""..ruletag.."\"\n"
+        local filename = logpath..'/'..servername.."_sec.log"
         write(filename,line)
     end
 end
@@ -71,7 +71,7 @@ ckrules=read_rule('cookie')
 
 function say_html()
     if Redirect then
-        ngx.header.content_type = "text/html"
+        ngx.header.content_type = "text/html;charset=UTF-8"
         ngx.status = ngx.HTTP_FORBIDDEN
         ngx.say(html)
         ngx.exit(ngx.status)
@@ -237,6 +237,19 @@ function whiteip()
         return false
 end
 
+function whiteipfile()
+    local ipfile = io.open(ipWhitelist_file,"r")
+    if ipfile == nil then
+        return
+    end
+    for ip in ipfile:lines() do
+        if getClientIp() == ip then
+            return true
+        end
+    end
+    ipfile:close()
+end
+
 function blockip()
      if next(ipBlocklist) ~= nil then
         clientIp = getClientIp()
@@ -248,4 +261,18 @@ function blockip()
          end
      end
          return false
+end
+
+function blockipfile()
+    local ipfile = io.open(ipBlocklist_file,"r")
+    if ipfile==nil then
+        return
+    end
+    for ip in ipfile:lines() do
+        if getClientIp() == ip then
+                ngx.exit(403)
+                return true
+        end
+    end
+    ipfile:close()
 end
