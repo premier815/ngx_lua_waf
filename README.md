@@ -65,10 +65,14 @@ nginx安装路径假设为:/usr/local/nginx/conf/
         --是否开启URL白名单
         black_fileExt={"php","jsp"}
         --填写不允许上传文件后缀类型
-        ipWhitelist={"127.0.0.1"}
-        --ip白名单，多个ip用逗号分隔
-        ipBlocklist={"1.0.0.1"}
-        --ip黑名单，多个ip用逗号分隔
+        ipWhitelist={"127.0.0.1","10.10.10."}
+        --ip白名单，多个ip用逗号分隔。支持匹配ip前三段的写法
+        ipBlocklist={"1.0.0.1","1.2.3."}
+        --ip黑名单，多个ip用逗号分隔。支持匹配ip前三段的写法
+        ipWhitelist_file="/usr/local/nginx/conf/waf/wafconf/ipWhitefile"
+        --ip白名单文件，每行一个ip
+        ipBlocklist_file="/usr/local/nginx/conf/waf/wafconf/ipBlockfile"
+        --ip黑名单文件，每行一个ip
         CCDeny="on"
         --是否开启拦截cc攻击(需要nginx.conf的http段增加lua_shared_dict limit 10m;)
         CCrate = "100/60"
@@ -77,7 +81,8 @@ nginx安装路径假设为:/usr/local/nginx/conf/
         html=[[Please go away~~]]
         --警告内容,可在中括号内自定义
         备注:不要乱动双引号，区分大小写
-        
+
+
 ### 检查规则是否生效
 
 部署完毕可以尝试如下命令：        
