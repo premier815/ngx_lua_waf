@@ -4,7 +4,7 @@
 # Date: 2017/12/4
 # Desc: 在原有的nginx上添加lua模块
 # Usage: /bin/bash installNgxLua.sh
-# LastModify: 2018/7/31
+# LastModify: 2018/8/3
 
 
 get_nginx_info(){
@@ -17,7 +17,7 @@ get_nginx_info(){
    nginxVs=$(cat ${ngxTmpFile} | head -1 | awk -F'/' '{print $2}')
    nginxPid=$(cat ${ngxTmpFile} | grep -oP "pid-path=.*nginx.pid" | awk -F'=' '{print $2}')
    nginxConfFile=$(cat ${ngxTmpFile} | grep -oP "conf-path=.*nginx.conf" | awk -F'=' '{print $2}')
-   ngxPathDir=$(echo ${nginxConfFile%/*})
+   ngxPathDir=$(dirname ${nginxConfFile})
 
    [ "$(grep -oP 'lua' ${nginxConfFile})" != "" ] && echo "已经存在lua配置" \
        && exit 1
@@ -83,11 +83,9 @@ install_lua(){
     nginx -t >/dev/null
     [ $? -ne 0 ] && echo "nginx 配置错误，请检查" && exit 1
     kill -USR2 $(cat ${nginxPid})
-    [ -f ${nginxPid}.oldbin ] && kill -WINCH $(cat ${nginxPid}.oldbin) \
-        || echo "no ${nginxPid}.oldbin"
     [ -f ${nginxPid}.oldbin ] && kill -QUIT $(cat ${nginxPid}.oldbin)
 
-    echo "安装完成"
+    echo "Nginx升级完成"
     rm -f ${ngxTmpFile} ${ngxTmpFile}.sh
     cd ..
 }
@@ -99,7 +97,7 @@ deploy_waf(){
     which git &>/dev/null
     [ $? -ne 0 ] && yum install git -y
     git clone  ${wafRepoUrl} -b master waf
-    [ $? -ne 0 ] && echo "仓库clone失败" && exit 1
+    [ $? -ne 0 ] && echo "ngx_lua_waf仓库clone失败" && exit 1
 
     [ -d ${ngxPathDir}/waf ] && rm -rf ${ngxPathDir}/waf
     mv waf ${ngxPathDir}
@@ -111,7 +109,7 @@ deploy_waf(){
     lua_shared_dict limit 10m;\n\
     init_by_lua_file ${ngxPathDir}/waf/init.lua;\n\
     access_by_lua_file ${ngxPathDir}/waf/waf.lua;\n" ${nginxConfFile}
-    echo "lua配置完成"
+    echo "lua配置完成。请手动reload Nginx使配置生效"
 }
 
 main(){
